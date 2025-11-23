@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לזר - מערכת ניהול מלאה</title>
+    <style>
+        :root {
+            --primary-color: #0F204B; /* ברירת מחדל: כחול */
+            --secondary-color: #C5A059; /* ברירת מחדל: זהב */
+            --bg-color: #F5F5F7;
+            --text-color: #333333;
+            --paper-bg: #ffffff;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-serif: 'Times New Roman', serif;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+            overflow-y: auto;
+        }
+
+        .logo-area {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo-symbol {
+            font-family: var(--font-serif);
+            font-size: 40px;
+            color: var(--secondary-color);
+            border: 2px solid var(--secondary-color);
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: block;
+            font-weight: bold;
+        }
+
+        .brand-name-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .slogan-display {
+            font-size: 0.8rem;
+            color: #cccccc;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: white;
+            padding: 12px;
+            text-align: right;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background-color: rgba(255,255,255,0.15);
+            font-weight: bold;
+        }
+        
+        .nav-btn.settings-btn {
+            margin-top: 20px;
+            background-color: rgba(0,0,0,0.2);
+            border: 1px dashed rgba(255,255,255,0.3);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Form Panel */
+        .editor-panel {
+            width: 37%;
+            padding: 30px;
+            overflow-y: auto;
+            background: #fff;
+            border-left: 1px solid #ddd;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        h2 { margin-top: 0; color: var(--primary-color); border-bottom: 2px solid var(--secondary-color); padding-bottom: 10px; display: inline-block;}
+
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 10px; }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        input[type="color"] {
+            height: 40px;
+            padding: 2px;
+            cursor: pointer;
+        }
+
+        textarea { resize: vertical; min-height: 80px; }
+
+        button.action-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button.action-btn:hover {
+            filter: brightness(1.2);
+            transform: translateY(-1px);
+        }
+
+        .item-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .remove-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            flex: 1;
+            background-color: #e0e0e0;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            background: var(--paper-bg);
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            padding: 20mm;
+            box-sizing: border-box;
+            position: relative;
+            color: #000; /* Ensure print text is black unless specified */
+        }
+        
+        /* Editable content visual cue on hover */
+        .editable-field:hover {
+            background-color: rgba(255, 255, 0, 0.1);
+            cursor: text;
+            outline: 1px dashed #ccc;
+        }
+
+        /* Document Components */
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .doc-logo-text {
+            color: var(--primary-color);
+            font-size: 24px;
+            font-weight: bold;
+            font-family: var(--font-serif);
+        }
+
+        .doc-slogan {
+            font-size: 0.9rem;
+            color: #666;
+            letter-spacing: 1px;
+        }
+
+        .doc-meta {
+            text-align: left;
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .doc-title {
+            text-align: center;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-decoration: underline;
+            text-decoration-color: var(--secondary-color);
+        }
+
+        .client-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-right: 5px solid var(--secondary-color);
+            margin-bottom: 30px;
+        }
+
+        /* Table Styling */
+        .doc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .doc-table th { background-color: var(--primary-color); color: white; padding: 12px; text-align: right; }
+        .doc-table td { border-bottom: 1px solid #ddd; padding: 12px; }
+        .doc-table tr:nth-child(even) { background-color: #f2f2f2; }
+
+        .totals {
+            text-align: left;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            margin-left: 20px;
+        }
+        .total-final {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            border-top: 2px solid var(--secondary-color);
+            padding-top: 10px;
+            display: inline-block;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 15mm;
+            left: 20mm;
+            right: 20mm;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #777;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        .signature-section {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .sign-line {
+            border-top: 1px solid #000;
+            width: 40%;
+            padding-top: 5px;
+            text-align: center;
+        }
+
+        /* Sticky utility strip for mobile */
+        .topbar {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--primary-color);
+            color: #fff;
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .hamburger {
+            width: 32px;
+            height: 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            display: block;
+            height: 3px;
+            background: #fff;
+            border-radius: 10px;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .pill-badge {
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            body { flex-direction: column; height: auto; }
+            .sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); transition: transform 0.3s ease; z-index: 30; width: var(--sidebar-width); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { flex-direction: column; }
+            .editor-panel { width: 100%; border-left: none; box-shadow: none; }
+            .preview-panel { padding: 20px; }
+            .topbar { display: flex; }
+        }
+
+        /* Print */
+        @media print {
+            .sidebar, .editor-panel, .topbar { display: none !important; }
+            .main-content, .preview-panel { display: block; height: auto; overflow: visible; background: white; padding: 0; }
+            .a4-page { box-shadow: none; margin: 0; width: 100%; page-break-after: always; border: none; }
+            /* Remove editable highlights in print */
+            .editable-field:hover { background: none; outline: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="hamburger" onclick="toggleSidebar()">
+            <span></span><span></span><span></span>
+        </div>
+        <div class="toolbar-actions">
+            <div class="pill-badge" id="unsavedBadge" style="display:none;">שינויים נשמרו מקומית</div>
+            <button class="action-btn" style="width:auto; padding:10px 16px; margin:0;" onclick="window.print()">🖨️ הדפס / PDF</button>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-symbol" id="sidebarLogoSymbol">L</div>
+            <div class="brand-name-display" id="sidebarBrandName">לזר עבודות שיפוצים</div>
+            <div class="slogan-display" id="sidebarSlogan">בונים אמון, מגשימים חלומות</div>
+        </div>
+        
+        <button class="nav-btn active" onclick="setMode('quote')">📄 הצעת מחיר</button>
+        <button class="nav-btn" onclick="setMode('invoice')">💼 חשבונית / דרישת תשלום</button>
+        <button class="nav-btn" onclick="setMode('contract')">🤝 חוזה עבודה</button>
+        <button class="nav-btn" onclick="setMode('warranty')">🛡️ תעודת אחריות</button>
+        
+        <div style="flex: 1"></div> <button class="nav-btn settings-btn" onclick="setMode('settings')">⚙️ הגדרות מיתוג</button>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="editor-panel">
+            <h2 id="panelTitle">עריכת הצעת מחיר</h2>
+
+            <div id="settings-mode" style="display: none;">
+                <div class="form-group">
+                    <label>שם העסק (יופיע בלוגו ובכותרות)</label>
+                    <input type="text" id="cfgBrandName" oninput="updateConfig()">
+                </div>
+                <div class="form-group">
+                    <label>סלוגן</label>
+                    <input type="text" id="cfgSlogan" oninput="updateConfig()">
+                </div>
+                <div class="form-group">
+                    <label>אות לוגו (סמל)</label>
+                    <input type="text" id="cfgSymbol" maxlength="2" oninput="updateConfig()">
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <label>צבע ראשי (אמינות)</label>
+                        <input type="color" id="cfgPrimaryColor" oninput="updateConfig()">
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label>צבע משני (יוקרה)</label>
+                        <input type="color" id="cfgSecondaryColor" oninput="updateConfig()">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>פרטי התקשרות (יופיעו בפוטר)</label>
+                    <input type="text" id="cfgContact" oninput="updateConfig()">
+                </div>
+                <div class="form-group">
+                    <label>משפט השראה לפוטר</label>
+                    <input type="text" id="cfgFooterQuote" oninput="updateConfig()">
+                </div>
+                <p style="font-size:0.8rem; color:#888;">* כל השינויים נשמרים בזמן אמת על המסך (לא נשמרים בסגירת הדפדפן בקובץ HTML זה).</p>
+            </div>
+
+            <div id="document-inputs">
+                <div class="form-group">
+                    <label>שם הלקוח</label>
+                    <input type="text" id="inpClientName" placeholder="שם מלא" oninput="refreshDoc()">
+                </div>
+                <div class="form-group">
+                    <label>כתובת הפרויקט</label>
+                    <input type="text" id="inpAddress" placeholder="כתובת" oninput="refreshDoc()">
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <label>מספר מסמך</label>
+                        <input type="text" id="inpDocNum" value="2025-001" oninput="refreshDoc()">
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label>תאריך</label>
+                        <input type="date" id="inpDate" oninput="refreshDoc()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <label>מטבע</label>
+                        <select id="inpCurrency" onchange="refreshDoc()">
+                            <option value="₪">₪ - ש"ח</option>
+                            <option value="$">$ - דולר</option>
+                            <option value="€">€ - אירו</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label>מע"מ (%)</label>
+                        <input type="number" id="inpVat" min="0" step="0.1" value="17" oninput="refreshDoc()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <label>הנחה כללית (%)</label>
+                        <input type="number" id="inpDiscount" min="0" max="100" step="0.5" value="0" oninput="refreshDoc()">
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label>קוד פרויקט / תיק</label>
+                        <input type="text" id="inpProjectRef" placeholder="PRJ-2025-01" oninput="refreshDoc()">
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+                <div id="quote-specifics">
+                    <label>פריטי ההצעה</label>
+                    <div id="items-list"></div>
+                    <button class="action-btn" style="background:#6c757d; margin-bottom:20px;" onclick="addItem()">+ הוסף שורה</button>
+                    
+                    <div class="form-group">
+                        <label>הערות ותנאים (תחתית ההצעה)</label>
+                        <textarea id="inpQuoteNotes" oninput="refreshDoc()">המחירים אינם כוללים מע"מ כחוק.
+תוקף ההצעה: 14 יום.
+תנאי תשלום: בהתאם להתקדמות העבודה.</textarea>
+                    </div>
+                </div>
+
+                <div id="invoice-specifics" style="display:none;">
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1">
+                            <label>תאריך יעד לתשלום</label>
+                            <input type="date" id="inpDueDate" oninput="refreshDoc()">
+                        </div>
+                        <div class="form-group" style="flex:1">
+                            <label>אמצעי תשלום</label>
+                            <input type="text" id="inpPaymentMethod" placeholder="העברה/צ'ק/אשראי" oninput="refreshDoc()">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>הוראות תשלום</label>
+                        <textarea id="inpInvoiceNotes" oninput="refreshDoc()">נא לבצע תשלום עד לתאריך היעד. ניתן לשלם בהעברה בנקאית או צ'ק לפקודת לזר עבודות שיפוצים.</textarea>
+                    </div>
+                </div>
+
+                <div id="contract-specifics" style="display:none;">
+                    <div class="form-group">
+                        <label>תוכן החוזה (ניתן לעריכה מלאה)</label>
+                        <textarea id="inpContractBody" style="height: 300px;" oninput="refreshDoc()">הואיל והקבלן הינו בעל ידע, ניסיון ומומחיות בביצוע עבודות שיפוצים;
+והואיל והמזמין מעוניין בביצוע עבודות שיפוץ בנכס שבבעלותו;
+
+אי לכך הוסכם והוצהר כדלקמן:
+1. הקבלן מתחייב לבצע את העבודה בנאמנות, במקצועיות וברמה הגבוהה ביותר ("טוב שם משמן טוב").
+2. העבודה תכלול: [פירוט כללי או הפניה להצעת המחיר].
+3. תמורת ביצוע העבודה ישלם המזמין סך הכולל את המע"מ כחוק.
+4. לוח זמנים: תחילת עבודה ביום ______, סיום משוער בתוך ___ ימי עסקים.
+5. אחריות: הקבלן מעניק אחריות על טיב העבודה למשך 12 חודשים.
+                        </textarea>
+                    </div>
+                </div>
+
+                <div id="warranty-specifics" style="display:none;">
+                     <div class="form-group">
+                        <label>מלל תעודת האחריות</label>
+                        <textarea id="inpWarrantyBody" style="height: 150px;" oninput="refreshDoc()">תעודה זו מאשרת כי העבודות שבוצעו בבית משפחת [שם-לקוח] בוצעו בסטנדרט הגבוה ביותר.
+
+אנו מעניקים בזאת אחריות מלאה על טיב העבודה לתקופה של 12 חודשים מיום המסירה.
+האחריות כוללת: עבודות אינסטלציה, עבודות חשמל, וכישלון בחומרי מליטה.
+האחריות אינה כוללת: נזק בזדון או בלאי סביר.</textarea>
+                    </div>
+                </div>
+
+                <button class="action-btn" onclick="window.print()">🖨️ הדפס / שמור PDF</button>
+            </div>
+        </div>
+
+        <div class="preview-panel">
+            <div class="a4-page" id="paper">
+                <div class="doc-header">
+                    <div>
+                        <div class="doc-logo-text editable-field" contenteditable="true" id="docHeaderBrand">LAZAR</div>
+                        <div class="doc-slogan editable-field" contenteditable="true" id="docHeaderSlogan">Renovations & Design</div>
+                    </div>
+                    <div class="doc-meta">
+                        <div>תאריך: <span id="outDate"></span></div>
+                        <div>אסמכתא: <span id="outDocNum"></span></div>
+                        <div class="editable-field" contenteditable="true">עוסק מורשה: 00000000</div>
+                    </div>
+                </div>
+
+                <div id="docBody">
+                    </div>
+
+                <div class="footer">
+                    <div id="docFooterContact" class="editable-field" contenteditable="true">...</div>
+                    <div id="docFooterQuote" style="margin-top:5px; font-style:italic;" class="editable-field" contenteditable="true">...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION & STATE ---
+        const STORAGE_KEY = 'lazar-doc-builder';
+
+        let config = {
+            brandName: "לזר עבודות שיפוצים",
+            slogan: "בונים אמון. מגשימים חלומות.",
+            symbol: "ל",
+            primary: "#0F204B",
+            secondary: "#C5A059",
+            contact: "טלפון: 050-0000000 | מייל: office@lazar.co.il",
+            footerQuote: '"טוב שם טוב משמן טוב"'
+        };
+
+        let state = {
+            mode: 'quote', // quote, invoice, contract, warranty, settings
+            currency: '₪',
+            vat: 17,
+            discount: 0,
+            projectRef: '',
+            dueDate: '',
+            paymentMethod: '',
+            items: [
+                { desc: "פירוק והריסה (כולל פינוי פסולת)", qty: 1, price: 4500 },
+                { desc: "עבודות אינסטלציה (צנרת SP)", qty: 1, price: 12000 }
+            ]
+        };
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            hydrateFromStorage();
+
+            // Load config into inputs
+            document.getElementById('cfgBrandName').value = config.brandName;
+            document.getElementById('cfgSlogan').value = config.slogan;
+            document.getElementById('cfgSymbol').value = config.symbol;
+            document.getElementById('cfgPrimaryColor').value = config.primary;
+            document.getElementById('cfgSecondaryColor').value = config.secondary;
+            document.getElementById('cfgContact').value = config.contact;
+            document.getElementById('cfgFooterQuote').value = config.footerQuote;
+
+            // Set today's date
+            document.getElementById('inpDate').valueAsDate = new Date();
+            document.getElementById('inpVat').value = state.vat;
+            document.getElementById('inpDiscount').value = state.discount;
+            document.getElementById('inpCurrency').value = state.currency;
+            document.getElementById('inpProjectRef').value = state.projectRef;
+            document.getElementById('inpDueDate').value = state.dueDate;
+            document.getElementById('inpPaymentMethod').value = state.paymentMethod;
+
+            updateConfig(); // Apply colors and text
+            setMode(state.mode || 'quote'); // Start at persisted mode
+        };
+
+        // --- CORE FUNCTIONS ---
+
+        function toggleSidebar(forceState) {
+            const sidebar = document.getElementById('sidebar');
+            const isOpen = sidebar.classList.contains('open');
+            const next = (forceState !== undefined) ? forceState : !isOpen;
+            sidebar.classList.toggle('open', next);
+        }
+
+        function persistState() {
+            const payload = {
+                config,
+                state
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            document.getElementById('unsavedBadge').style.display = 'inline-block';
+            setTimeout(() => document.getElementById('unsavedBadge').style.display = 'none', 2500);
+        }
+
+        function hydrateFromStorage() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            try {
+                const saved = JSON.parse(raw);
+                if (saved.config) config = { ...config, ...saved.config };
+                if (saved.state) state = { ...state, ...saved.state };
+            } catch (err) {
+                console.warn('שגיאה בקריאת נתונים שמורים', err);
+            }
+        }
+
+        function setMode(mode) {
+            state.mode = mode;
+            persistState();
+
+            // Sidebar UI Update
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(mode));
+            if(activeBtn) activeBtn.classList.add('active');
+
+            // Toggle Panel Views
+            const isSettings = (mode === 'settings');
+            document.getElementById('settings-mode').style.display = isSettings ? 'block' : 'none';
+            document.getElementById('document-inputs').style.display = isSettings ? 'none' : 'block';
+
+            // Update Title
+            const titles = {
+                'quote': 'עריכת הצעת מחיר',
+                'invoice': 'עריכת חשבונית / דרישת תשלום',
+                'contract': 'עריכת חוזה עבודה',
+                'warranty': 'עריכת תעודת אחריות',
+                'settings': 'הגדרות מיתוג'
+            };
+            document.getElementById('panelTitle').innerText = titles[mode];
+
+            // Toggle Input Sections
+            document.getElementById('quote-specifics').style.display = (mode === 'quote') ? 'block' : 'none';
+            document.getElementById('invoice-specifics').style.display = (mode === 'invoice') ? 'block' : 'none';
+            document.getElementById('contract-specifics').style.display = (mode === 'contract') ? 'block' : 'none';
+            document.getElementById('warranty-specifics').style.display = (mode === 'warranty') ? 'block' : 'none';
+
+            if (!isSettings) refreshDoc();
+            toggleSidebar(false);
+        }
+
+        function updateConfig() {
+            // Get values from inputs
+            config.brandName = document.getElementById('cfgBrandName').value;
+            config.slogan = document.getElementById('cfgSlogan').value;
+            config.symbol = document.getElementById('cfgSymbol').value;
+            config.primary = document.getElementById('cfgPrimaryColor').value;
+            config.secondary = document.getElementById('cfgSecondaryColor').value;
+            config.contact = document.getElementById('cfgContact').value;
+            config.footerQuote = document.getElementById('cfgFooterQuote').value;
+
+            // Apply CSS Variables
+            document.documentElement.style.setProperty('--primary-color', config.primary);
+            document.documentElement.style.setProperty('--secondary-color', config.secondary);
+
+            // Update Sidebar
+            document.getElementById('sidebarBrandName').innerText = config.brandName;
+            document.getElementById('sidebarSlogan').innerText = config.slogan;
+            document.getElementById('sidebarLogoSymbol').innerText = config.symbol;
+
+            // Update Document Header/Footer
+            document.getElementById('docHeaderBrand').innerText = config.brandName;
+            document.getElementById('docHeaderSlogan').innerText = config.slogan;
+            document.getElementById('docFooterContact').innerText = config.contact;
+            document.getElementById('docFooterQuote').innerText = config.footerQuote;
+
+            persistState();
+        }
+
+        function refreshDoc() {
+            const client = document.getElementById('inpClientName').value;
+            const addr = document.getElementById('inpAddress').value;
+            const dateVal = document.getElementById('inpDate').value;
+            const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('he-IL') : '';
+            const docNum = document.getElementById('inpDocNum').value;
+            const vatRate = parseFloat(document.getElementById('inpVat').value || '0');
+            const discountRate = parseFloat(document.getElementById('inpDiscount').value || '0');
+            const currency = document.getElementById('inpCurrency').value;
+            const projectRef = document.getElementById('inpProjectRef').value;
+            const dueDate = document.getElementById('inpDueDate').value;
+            const paymentMethod = document.getElementById('inpPaymentMethod').value;
+
+            state.vat = vatRate;
+            state.discount = discountRate;
+            state.currency = currency;
+            state.projectRef = projectRef;
+            state.dueDate = dueDate;
+            state.paymentMethod = paymentMethod;
+            persistState();
+
+            // Update Meta
+            document.getElementById('outDate').innerText = dateStr;
+            document.getElementById('outDocNum').innerText = docNum;
+
+            const bodyContainer = document.getElementById('docBody');
+            let html = '';
+
+            // Common Client Box
+            html += `
+                <div class="client-box editable-field" contenteditable="true">
+                    <div style="font-size:1.1rem; font-weight:bold;">לכבוד: ${client}</div>
+                    <div>אתר העבודה: ${addr}</div>
+                    ${projectRef ? `<div>קוד פרויקט: ${projectRef}</div>` : ''}
+                </div>
+            `;
+
+            // Content per mode
+            if (state.mode === 'quote') {
+                html += `<div class="doc-title editable-field" contenteditable="true">הצעת מחיר לשיפוץ</div>`;
+
+                // Table
+                html += `
+                    <table class="doc-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50%">תיאור</th>
+                                <th style="width:10%">כמות</th>
+                                <th style="width:20%">מחיר יח'</th>
+                                <th style="width:20%">סה"כ</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                
+                let sum = 0;
+                state.items.forEach(item => {
+                    let lineTotal = item.qty * item.price;
+                    sum += lineTotal;
+                    html += `
+                        <tr>
+                            <td class="editable-field" contenteditable="true">${item.desc}</td>
+                            <td>${item.qty}</td>
+                            <td>${item.price.toLocaleString()} ${currency}</td>
+                            <td>${lineTotal.toLocaleString()} ${currency}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+
+                const discountValue = sum * (discountRate / 100);
+                const net = sum - discountValue;
+                let vat = net * (vatRate / 100);
+                let total = net + vat;
+
+                html += `
+                    <div class="totals">
+                        <div>סה"כ לפני הנחות: <strong>${sum.toLocaleString()} ${currency}</strong></div>
+                        <div>הנחה (${discountRate}%): <strong>-${discountValue.toLocaleString(undefined,{maximumFractionDigits:2})} ${currency}</strong></div>
+                        <div>סכום חייב לפני מע"מ: <strong>${net.toLocaleString(undefined,{maximumFractionDigits:2})} ${currency}</strong></div>
+                        <div>מע"מ (${vatRate}%): <strong>${vat.toLocaleString(undefined, {maximumFractionDigits:2})} ${currency}</strong></div>
+                        <div class="total-final">סה"כ לתשלום: ${total.toLocaleString(undefined, {maximumFractionDigits:2})} ${currency}</div>
+                    </div>
+                `;
+
+                let notes = document.getElementById('inpQuoteNotes').value.replace(/\n/g, '<br>');
+                html += `<div style="margin-top:30px; font-size:0.9rem;" class="editable-field" contenteditable="true"><strong>הערות:</strong><br>${notes}</div>`;
+
+                renderItemsInputs(); // Re-render inputs to stay synced
+
+            } else if (state.mode === 'invoice') {
+                html += `<div class="doc-title editable-field" contenteditable="true">חשבונית / דרישת תשלום</div>`;
+
+                html += `
+                    <table class="doc-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50%">תיאור</th>
+                                <th style="width:10%">כמות</th>
+                                <th style="width:20%">מחיר יח'</th>
+                                <th style="width:20%">סה"כ</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                let sum = 0;
+                state.items.forEach(item => {
+                    const lineTotal = item.qty * item.price;
+                    sum += lineTotal;
+                    html += `
+                        <tr>
+                            <td class="editable-field" contenteditable="true">${item.desc}</td>
+                            <td>${item.qty}</td>
+                            <td>${item.price.toLocaleString()} ${currency}</td>
+                            <td>${lineTotal.toLocaleString()} ${currency}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+
+                const discountValue = sum * (discountRate / 100);
+                const net = sum - discountValue;
+                const vat = net * (vatRate / 100);
+                const total = net + vat;
+
+                html += `
+                    <div class="totals">
+                        <div>סיכום ביניים: <strong>${sum.toLocaleString()} ${currency}</strong></div>
+                        <div>הנחה (${discountRate}%): <strong>-${discountValue.toLocaleString(undefined,{maximumFractionDigits:2})} ${currency}</strong></div>
+                        <div>סכום חייב: <strong>${net.toLocaleString(undefined,{maximumFractionDigits:2})} ${currency}</strong></div>
+                        <div>מע"מ (${vatRate}%): <strong>${vat.toLocaleString(undefined,{maximumFractionDigits:2})} ${currency}</strong></div>
+                        <div class="total-final">יתרה לתשלום: ${total.toLocaleString(undefined,{maximumFractionDigits:2})} ${currency}</div>
+                    </div>
+                `;
+
+                const dueText = dueDate ? new Date(dueDate).toLocaleDateString('he-IL') : '___';
+                const methodText = paymentMethod || 'בהתאם לסיכום';
+                const invoiceNotes = document.getElementById('inpInvoiceNotes').value.replace(/\n/g, '<br>');
+                html += `
+                    <div style="margin-top:25px; font-size:0.95rem; line-height:1.6;" class="editable-field" contenteditable="true">
+                        <strong>תנאי תשלום:</strong><br>
+                        יעד לתשלום: ${dueText}<br>
+                        אמצעי תשלום: ${methodText}<br>
+                        ${invoiceNotes}
+                    </div>
+                `;
+                renderItemsInputs();
+
+            } else if (state.mode === 'contract') {
+                html += `<div class="doc-title editable-field" contenteditable="true">הסכם עבודה</div>`;
+                let content = document.getElementById('inpContractBody').value;
+                // Inject client name dynamically into content preview if placeholder exists
+                content = content.replace('[שם-לקוח]', client || '_______');
+                html += `<div style="white-space: pre-wrap; line-height:1.6;" class="editable-field" contenteditable="true">${content}</div>`;
+                
+                html += `
+                    <div class="signature-section">
+                        <div class="sign-line">חתימת הלקוח</div>
+                        <div class="sign-line">חתימת הקבלן</div>
+                    </div>
+                `;
+
+            } else if (state.mode === 'warranty') {
+                html += `<div class="doc-title editable-field" contenteditable="true">תעודת אחריות</div>`;
+                let content = document.getElementById('inpWarrantyBody').value;
+                content = content.replace('[שם-לקוח]', client || '_______');
+                html += `
+                    <div style="border: 1px solid var(--secondary-color); padding: 30px; border-radius: 8px; min-height: 300px;">
+                        <div style="white-space: pre-wrap; line-height:1.8; font-size: 1.1rem;" class="editable-field" contenteditable="true">${content}</div>
+                        
+                        <div style="margin-top: 50px; text-align:center;">
+                            <div style="margin-bottom:10px;">על החתום:</div>
+                            <div style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--primary-color);">${config.brandName}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            bodyContainer.innerHTML = html;
+        }
+
+        // --- ITEM MANAGEMENT ---
+        function addItem() {
+            state.items.push({ desc: "", qty: 1, price: 0 });
+            refreshDoc();
+        }
+
+        function removeItem(idx) {
+            state.items.splice(idx, 1);
+            refreshDoc();
+        }
+
+        function updateItemData(idx, field, val) {
+            state.items[idx][field] = (field === 'desc') ? val : parseFloat(val);
+            refreshDoc();
+        }
+
+        function renderItemsInputs() {
+            const container = document.getElementById('items-list');
+            container.innerHTML = '';
+            state.items.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'item-row';
+                div.innerHTML = `
+                    <input type="text" value="${item.desc}" placeholder="תיאור" oninput="updateItemData(${i}, 'desc', this.value)" style="flex:2">
+                    <input type="number" value="${item.qty}" placeholder="כמות" oninput="updateItemData(${i}, 'qty', this.value)" style="flex:0.5">
+                    <input type="number" value="${item.price}" placeholder="מחיר" oninput="updateItemData(${i}, 'price', this.value)" style="flex:1">
+                    <button class="remove-btn" onclick="removeItem(${i})">X</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+    </script>
+</body>
+</html>
