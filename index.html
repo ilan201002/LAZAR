@@ -1,3 +1,138 @@
+<!--
+# דו״ח ניתוח ושדרוג מערכת המסמכים לעסק שיפוצים יוקרתי
+
+## مقدمة (הקדמה)
+
+דו״ח זה מציג ניתוח מעמיק של המערכת הנוכחית לניהול והפקת מסמכים עבור עסק שיפוצים יוקרתי, וכן המלצות רב-תחומיות לשדרוג המערכת. הדגש הוא על ראייה ארכיטקטונית וארגונית ברמה גבוהה, שתבטיח שהמערכת תהיה מודרנית, יעילה, מאובטחת ומתאימה לצרכי החברה "לזר עבודות שיפוצים" (שם בדוי לצורך הדו״ח) ולסטנדרטים מקצועיים גבוהים.
+
+הדו״ח מחולק לשבעה חלקים מרכזיים:
+
+1. ניתוח ארכיטקטוני של הקוד הקיים – סקירת מבנה ה-HTML/CSS/JS הנוכחי, זיהוי יתרונות וחולשות, והערות לגבי מבנים לא אופטימליים.
+2. הצעה טכנולוגית מלאה – תכנון מעבר לטכנולוגיות מודרניות (Frontend ו-Backend), כולל בחירת פלטפורמת פיתוח צד-לקוח (SPA/React) וצד-שרת (Node.js/Firebase) ומסד נתונים (SQL/NoSQL).
+3. מנגנוני חתימה דיגיטלית – המלצות לשילוב פתרון חתימה דיגיטלית חוקית (דוגמת DocuSign) בהתאמה לחוק.
+4. אוטומציית הפקת מסמכים – הצעת מבנה טמפלייט+נתונים ליצירה אוטומטית של מסמכים (הצעות מחיר, חוזים וכו') וממשק משתמש ידידותי לניהול התהליך.
+5. התאמה להדפסה ולרספונסיביות – הנחיות לעיצוב המסמכים להדפסה מקצועית ולאתר רספונסיבי המתאים לכל מסך.
+6. אבטחת מידע ופרטיות – זיהוי סיכוני אבטחה ופרטיות והמלצות להגנה על מידע רגיש ועמידה ברגולציות (GDPR ובדין הישראלי).
+7. תוכנית שדרוג והטמעה – שלבי יישום מומלצים, לפי סדר עדיפויות, כולל הנחיות לצוותי הפיתוח, העיצוב ואנשי האבטחה.
+
+## 1. ניתוח ארכיטקטוני של הקוד הקיים
+
+### סקירת מבנה הקוד
+
+הקוד הקיים, כפי שסופק בקובץ ה-HTML, מהווה מסמך אחד מרכזי המכיל תוכן, עיצוב (CSS) וסקריפטים (JS) המשולבים יחד. המבנה כולל שימוש מרובה באלמנטים גנריים כמו `<div>` ו-`<p>`, ולעיתים עשוי לכלול "עוגני" `ng-content` המעידים על כך שהקובץ הופק מסביבת פיתוח מבוססת Angular או דומה לה. התוכן ברובו סטטי וטקסטואלי (כגון תמלולים, תיאורים ותוכן עסקי), לצד מקטעי CSS ו-JavaScript משובצים ישירות במסמך.
+
+### חוזקות
+
+- המסמך מאגד את כל המידע, התצוגה וההתנהגות בקובץ יחיד, כך שניתן לגשת אליו ולקבל תצוגה מלאה ומיידית של המוצר ("self-contained").
+- ייתכן שהשתמשו במסגרת עבודה (Framework) כמו Angular, מה שמספק מבנה בסיסי ועקרונות של רכיבים (Components) ותבניות, המפרידים לוגית בין חלקי הממשק (אם כי בקובץ הסטטי הסופי ההפרדה פחות ברורה).
+- יש שימוש במחלקות CSS עבור עיצוב עקבי (למשל מחלקות כמו `query-text-line` וכו'), דבר המעיד על ניסיון לשמור על סגנון אחיד לאורך המסמך.
+
+### חולשות
+
+- **העדר הפרדת חששות (Separation of Concerns):** התוכן (HTML), ההצגה (CSS) וההתנהגות (JS) משולבים יחד בקובץ אחד גדול, מה שמקשה על תחזוקה והרחבה. מומלץ להחזיק קבצים נפרדים ל-HTML, CSS ו-JS כדי להפריד תוכן, עיצוב והתנהגות.
+- **שכפול וקוד לא מודולרי:** ייתכן שיש בקובץ קטעים חוזרים במקום להיות מופיעים פעם אחת ולהיות מיושמים בכל מקום נדרש. קוד שאינו מודולרי מקשה על שינוי או תיקון ומקשה על בדיקות יחידה.
+- **טמפלייט סטטי ללא הפרדה בין נתונים לתצוגה:** תוכן עסקי מקודד ישירות ב-HTML, מה שמקשה על עדכון ומונע שימוש חוזר בנתונים למטרות אחרות.
+- **טעינה ותחזוקה:** קובץ יחיד גדול עלול לגרום לזמני טעינה ארוכים ולניצול זיכרון גבוה בדפדפן; בהיעדר פיצול לא ניתן לנצל מטמון (Caching) עבור CSS/JS כלל-מערכתיים.
+- **מבנים לא אופטימליים ותחביר:** שימוש יתר ב-`<div>` במקום תגיות סמנטיות, מבנה HTML עמוק, ושימוש ב-inline styles או `<style>` בתוך ה-HTML.
+
+### המלצות ארכיטקטורת קוד משופרת
+
+- **מודולריזציה ורכיבים:** פירוק הממשק לרכיבים קטנים לשימוש חוזר (כותרת מסמך, טבלת עלויות, שדה חתימה דיגיטלית ועוד).
+- **שמישות חוזרת (DRY):** זיהוי מקטעי קוד חוזרים ובידודם; פונקציה אחת לחישוב מע״מ, למשל, תשמש בכל מקום.
+- **קריאות ופישוט הקוד:** הסרת חלקים מיותרים, הוספת הערות באזורים מורכבים, ושמירת קוד נקי ומובן.
+- **הכנה להרחבה עתידית:** יצירת מבנה תיקיות ומודולים שיתמוך בהוספת תכונות חדשות (ניהול לקוחות, מסמכים, הגדרות מערכת וכו').
+- **שיפור ביצועים באמצעות מטמון:** אחרי הפרדה לקבצים, הדפדפן ישמור במטמון את קובצי ה-CSS/JS בין דפי המערכת ויקצר זמני טעינה; ניתן גם ליישם טעינה עצלה (lazy loading).
+
+## 2. הצעה טכנולוגית מלאה (Frontend/Backend ומסד נתונים)
+
+### 2.1 מעבר לאפליקציית SPA מודרנית
+
+מומלץ לבנות את הממשק כאפליקציית Single Page Application (SPA) מודרנית (React/Angular/Vue). יתרונות: חוויית משתמש מהירה וחלקה, הפרדת Frontend/Backend, רכיבים מודולריים לשימוש חוזר, קהילה רחבה וכלים מתקדמים (ניהול state, routing, TypeScript, בדיקות).
+
+### 2.2 סביבת Backend מתאימה
+
+שתי חלופות עיקריות:
+
+- **Node.js + Express:** שליטה מלאה בלוגיקה שרתית, גמישות בבחירת מסד נתונים ואינטגרציות צד ג'. דורש ניהול שרתים, סקלאביליות וניטור עצמיים.
+- **Firebase (BaaS):** Backend מנוהל בענן (Firestore, Auth, Storage, Functions). פיתוח מהיר וסקלאביליות אוטומטית אך עם תלות בפלטפורמה ומגבלות גמישות.
+
+ניתן לשלב – להשתמש ב-Firestore לאחסון ואימות ולבנות פונקציות Node ייעודיות ללוגיקה מורכבת.
+
+### 2.3 בחירת מסד נתונים
+
+- **SQL (MySQL/PostgreSQL):** סכימה קשיחה, עסקאות ACID, שאילתות מורכבות (JOINs). מתאים לצרכי עקביות חזקה ורלציות מורכבות.
+- **NoSQL (Firestore/MongoDB):** מבנה גמיש, סקלאביליות אופקית, פיתוח זריז. מתאים למסמכים ונתונים משתנים. מומלץ כפתרון ראשי למערכת המסמכים, עם אפשרות לשלב רכיב רלציוני אם נדרש.
+
+## 3. מנגנוני חתימה דיגיטלית
+
+- **שילוב שירות חתימה מוכר (DocuSign/Adobe Sign/PandaDoc):** עמידה בתקינה משפטית, אימות זהות, חתימה דיגיטלית מאובטחת, API להטמעה ותיעוד חתימות.
+- **פתרון פנימי:** אפשרי לחתימה אלקטרונית בסיסית (ציור/העלאת חתימה, אישור OTP), אך מורכב להבטיח תוקף משפטי מלא ללא CA חיצוני.
+- **המלצה:** פתרון היברידי – להשתמש בשירות חתימה עבור מסמכים מחייבים (חוזים/אחריות) ולתמוך בחתימה אלקטרונית פשוטה למסמכים פחות קריטיים, עם סטטוס חתימה ומעקב במערכת.
+
+## 4. אוטומציית הפקת מסמכים (Template + Data)
+
+- יצירת תבניות ייעודיות לכל סוג מסמך (הצעת מחיר, חשבונית, חוזה, תעודת אחריות) עם placeholders לנתונים.
+- מודל נתונים ללקוחות/פרויקטים/מסמכים; שמירת נתוני שורות (פריטים) וסטטוס (טיוטה/נשלח/חתום/שולם).
+- UI נוח ליצירת מסמך: בחירת סוג, שיוך ללקוח/פרויקט, הוספת שורות, חישוב סכומים ומע"מ אוטומטי, הערות מותאמות.
+- יצוא PDF ושמירתו בשרת/ענן, שליחה במייל ללקוח, סטטוס ומעקב אחרי חתימות.
+- תמיכה בגרסאות, טיוטות והרשאות צפייה/עריכה לפי תפקיד.
+
+## 5. התאמה להדפסה ולרספונסיביות
+
+- **רספונסיביות מלאה:** תכנון mobile-first, breakpoints למסכים שונים, שימוש ב-Flex/Grid, בדיקות במכשירים אמיתיים, התאמה למגע.
+- **CSS להדפסה:** שימוש ב-`@media print` להסתרת ניווט/כפתורים, הגדרת `@page` ל-A4 ושוליים, פונט קריא להדפסה, ניגודיות גבוהה, גרסת שחור-לבן ללוגו בעת הצורך.
+- **פריסה יוקרתית:** לוגו ווקטורי, כותרות ברורות, טבלאות עם קווי הפרדה עדינים, צבעי מותג מאוזנים, ריווח נדיב וקריאות גבוהה גם בשחור-לבן.
+
+## 6. אבטחת מידע ופרטיות
+
+- **תקשורת מוצפנת:** שימוש ב-HTTPS לכל התעבורה.
+- **ניהול זהויות והרשאות:** התחברות מאובטחת, תפקידי משתמשים (RBAC), least privilege, כללי גישה במסד (למשל Firebase rules).
+- **הגנה על נתונים רגישים:** הצפנת נתונים במנוחה, אחסון סודות באופן מאובטח, הצפנת קבצים רגישים.
+- **Audit Log:** תיעוד פעולות רגישות (יצירה/עריכה/מחיקה/צפייה במסמכים), שמירת לוגים מוגנים.
+- **הקשחת אפליקציה:** הגנות OWASP Top 10 (XSS/SQL/NoSQL Injection, CSRF), בדיקות חדירה תקופתיות, WAF.
+- **גיבויים וזמינות:** מדיניות גיבוי ושחזור סדורה, יתירות בענן, תרגול שחזור.
+- **פרטיות ורגולציה:** מדיניות פרטיות, ניהול הסכמות, מענה לזכויות משתמש (מחיקה/עיון), עמידה ב-GDPR ובדין הישראלי, חוזי עיבוד נתונים עם ספקי צד ג'.
+
+## 7. תוכנית שדרוג והטמעה
+
+### שלב א': תכנון מפורט והיערכות
+
+- סדנת דרישות עם בעלי עניין; הגדרת MVP וסדר עדיפויות לסוגי מסמכים ושדות.
+- בחירת סטאק סופי (Frontend, Backend, DB, ספריות PDF/חתימה), תרשים ארכיטקטורה גבוה, והגדרת CI/CD וסביבות (פיתוח/בדיקות/ייצור).
+- עיצוב UX/UI ו-Style Guide (צבעים, טיפוגרפיה, רכיבים), Mockups לדסקטופ ומובייל.
+
+### שלב ב': פיתוח הדרגתי ובדיקות
+
+- ספרינטי הקמה: שלד React + Backend, מודול משתמשים בסיסי.
+- CRUD לקוחות/פרויקטים, טמפלייט הצעת מחיר + הפקת PDF, אינטגרציית חתימה (sandbox), הרחבה לחוזה/חשבונית/אחריות.
+- הקשחת אבטחה (ולידציות, הרשאות, בדיקות OWASP), דוחות וחיפוש, בדיקות יחידה/אינטגרציה.
+
+### שלב ג': הדרכה, השקה ותמיכה
+
+- הדרכת הצוות, הרצת פיילוט מקביל לשיטה הישנה, איסוף משוב ושיפורים.
+- תוכנית תמיכה ותחזוקה, עדכוני ספריות, ניטור (Sentry וכו').
+
+### הנחיות לצוותים
+
+- **פיתוח:** סטנדרטי קוד, תיעוד, Code Review, שיתוף עם אבטחה, לינטינג ובדיקות אוטומטיות.
+- **עיצוב:** נגישות, שפה מותגית אחידה, טיפול בתרחישי קצה (מסמכים ארוכים/ריקים), רכיבי UI ניתנים לשימוש חוזר.
+- **אבטחה/תשתיות:** Threat Modeling, בדיקות עומס וחדירה, חומות אש/WAF, כללי אבטחה במסד, גיבויים ושחזור מתורגלים.
+- **משפטי/רגולטורי:** ביקורת נוסחי מסמכים, התאמה לחוקי חתימה אלקטרונית, מדיניות פרטיות והסכמות.
+
+### לו"ז משוער ויעדי הצלחה
+
+- 3–4 חודשי MVP (הפקת סוג מסמך מרכזי אחד end-to-end), 2–3 חודשי הרחבה לכלל המסמכים והשיפורים.
+- מדדי הצלחה: קיצור זמן הפקת מסמך, ירידת טעויות הקלדה, זמני חתימה מקוצרים, שביעות רצון משתמשים פנימיים.
+
+## סיכום
+
+התוכנית מביאה את "לזר עבודות שיפוצים" לרמה מוסדית: UI/UX יוקרתי, התאמה למסך ולהדפסה, טכנולוגיות מודרניות (React + Backend ענני/Node), תהליכי חתימה דיגיטלית ואבטחה ברמה גבוהה, ואוטומציה מלאה של הפקת מסמכים. תכנון הדרגתי ובדיקות יסודיות יבטיחו השקה חלקה ושיפור תפעולי משמעותי לעסק.
+index.html
+New
++1053
+-0
+-->
+
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -177,6 +312,26 @@
             transform: translateY(-1px);
         }
 
+        button.action-btn.secondary {
+            background-color: var(--secondary-color);
+            color: #1f1f1f;
+        }
+
+        button.action-btn.secondary:hover {
+            filter: brightness(1.1);
+        }
+
+        .print-tip {
+            font-size: 0.85rem;
+            color: #666;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
         .item-row {
             display: flex;
             gap: 10px;
@@ -231,6 +386,33 @@
         }
 
         /* Document Components */
+        .doc-brand-strip {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .doc-brand-symbol {
+            width: 52px;
+            height: 52px;
+            line-height: 52px;
+            border-radius: 50%;
+            border: 2px solid var(--secondary-color);
+            color: var(--secondary-color);
+            font-family: var(--font-serif);
+            font-size: 26px;
+            font-weight: bold;
+            margin: 0 auto 10px;
+        }
+        .doc-brand-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 1px;
+        }
+        .doc-brand-slogan {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
         .doc-header {
             display: flex;
             justify-content: space-between;
@@ -365,6 +547,20 @@
             font-size: 0.85rem;
         }
 
+        /* Print scaffolding */
+        .print-header, .print-footer {
+            display: none;
+        }
+
+        .print-meta {
+            font-size: 0.95rem;
+            color: #222;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
         /* Responsive */
         @media (max-width: 1100px) {
             body { flex-direction: column; height: auto; }
@@ -378,9 +574,42 @@
 
         /* Print */
         @media print {
-            .sidebar, .editor-panel, .topbar { display: none !important; }
+            .sidebar, .editor-panel, .topbar, .no-print { display: none !important; }
+            .print-header, .print-footer { display: flex !important; }
+            .print-header {
+                position: fixed;
+                top: 10mm;
+                left: 15mm;
+                right: 15mm;
+                justify-content: space-between;
+                align-items: center;
+                padding-bottom: 6px;
+                border-bottom: 1px solid #e5e7eb;
+                background: #fff;
+            }
+            .print-footer {
+                position: fixed;
+                bottom: 10mm;
+                left: 15mm;
+                right: 15mm;
+                justify-content: space-between;
+                align-items: center;
+                padding-top: 6px;
+                border-top: 1px solid #e5e7eb;
+                font-size: 0.9rem;
+                color: #444;
+                background: #fff;
+            }
             .main-content, .preview-panel { display: block; height: auto; overflow: visible; background: white; padding: 0; }
-            .a4-page { box-shadow: none; margin: 0; width: 100%; page-break-after: always; border: none; }
+            .a4-page {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+                page-break-after: always;
+                border: none;
+                padding-top: 35mm;
+                padding-bottom: 30mm;
+            }
             /* Remove editable highlights in print */
             .editable-field:hover { background: none; outline: none; }
         }
@@ -396,6 +625,21 @@
             <div class="pill-badge" id="unsavedBadge" style="display:none;">שינויים נשמרו מקומית</div>
             <button class="action-btn" style="width:auto; padding:10px 16px; margin:0;" onclick="window.print()">🖨️ הדפס / PDF</button>
         </div>
+    </div>
+
+    <div class="print-header">
+        <div class="print-meta">
+            <strong id="printBrandName">לזר עבודות שיפוצים</strong>
+            <span id="printDocType">הצעת מחיר</span>
+        </div>
+        <div class="print-meta" style="justify-content: flex-end;">
+            <span id="printDocNum">מסמך: —</span>
+            <span id="printDocDate">תאריך: —</span>
+        </div>
+    </div>
+    <div class="print-footer">
+        <div id="printFooterContactText">טלפון: 050-0000000 | מייל: office@lazar.co.il</div>
+        <div class="print-meta" aria-hidden="true" style="gap:4px;">בטלו "Headers and footers" בחלון ההדפסה לקבלת PDF נקי</div>
     </div>
 
     <div class="sidebar" id="sidebar">
@@ -556,11 +800,21 @@
                 </div>
 
                 <button class="action-btn" onclick="window.print()">🖨️ הדפס / שמור PDF</button>
+                <button class="action-btn secondary" type="button" onclick="saveFullSnapshot()">💾 שמור הכול</button>
+                <div class="print-tip no-print">
+                    לטובת פלט נקי ללא פרטי דפדפן (כותרות/נתיב/תאריך), בטלו את האפשרות "Headers and footers" בחלון ההדפסה של הדפדפן. ניתן גם להשתמש בייצוא PDF באמצעות דפדפן Headless/Puppeteer לקבלת שליטה מלאה.
+                </div>
             </div>
         </div>
 
         <div class="preview-panel">
             <div class="a4-page" id="paper">
+                <div class="doc-brand-strip">
+                    <div class="doc-brand-symbol editable-field" contenteditable="true" id="docTopSymbol">L</div>
+                    <div class="doc-brand-name editable-field" contenteditable="true" id="docTopBrandName">לזר עבודות שיפוצים</div>
+                    <div class="doc-brand-slogan editable-field" contenteditable="true" id="docTopSlogan">בונים אמון. מגשימים חלומות.</div>
+                </div>
+
                 <div class="doc-header">
                     <div>
                         <div class="doc-logo-text editable-field" contenteditable="true" id="docHeaderBrand">LAZAR</div>
@@ -587,6 +841,7 @@
     <script>
         // --- CONFIGURATION & STATE ---
         const STORAGE_KEY = 'lazar-doc-builder';
+        const SNAPSHOT_KEY = 'lazar-doc-full-snapshot';
 
         let config = {
             brandName: "לזר עבודות שיפוצים",
@@ -612,6 +867,8 @@
             ]
         };
 
+        let savedFullSnapshot = null;
+
         // --- INITIALIZATION ---
         window.onload = function() {
             hydrateFromStorage();
@@ -636,6 +893,13 @@
 
             updateConfig(); // Apply colors and text
             setMode(state.mode || 'quote'); // Start at persisted mode
+
+            if (savedFullSnapshot) {
+                if (savedFullSnapshot.formValues) applyFormValues(savedFullSnapshot.formValues);
+                if (savedFullSnapshot.editableValues) applyEditableValues(savedFullSnapshot.editableValues);
+                if (savedFullSnapshot.mode) setMode(savedFullSnapshot.mode);
+                refreshDoc();
+            }
         };
 
         // --- CORE FUNCTIONS ---
@@ -653,20 +917,61 @@
                 state
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-            document.getElementById('unsavedBadge').style.display = 'inline-block';
-            setTimeout(() => document.getElementById('unsavedBadge').style.display = 'none', 2500);
+            showSavedBadge('שינויים נשמרו מקומית');
+        }
+
+        function showSavedBadge(text) {
+            const badge = document.getElementById('unsavedBadge');
+            if (!badge) return;
+            badge.innerText = text;
+            badge.style.display = 'inline-block';
+            clearTimeout(badge._hideTimer);
+            badge._hideTimer = setTimeout(() => {
+                badge.style.display = 'none';
+            }, 2500);
         }
 
         function hydrateFromStorage() {
             const raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) return;
-            try {
-                const saved = JSON.parse(raw);
-                if (saved.config) config = { ...config, ...saved.config };
-                if (saved.state) state = { ...state, ...saved.state };
-            } catch (err) {
-                console.warn('שגיאה בקריאת נתונים שמורים', err);
+            if (raw) {
+                try {
+                    const saved = JSON.parse(raw);
+                    if (saved.config) config = { ...config, ...saved.config };
+                    if (saved.state) state = { ...state, ...saved.state };
+                } catch (err) {
+                    console.warn('שגיאה בקריאת נתונים שמורים', err);
+                }
             }
+
+            const snapshotRaw = localStorage.getItem(SNAPSHOT_KEY);
+            if (snapshotRaw) {
+                try {
+                    savedFullSnapshot = JSON.parse(snapshotRaw);
+                    if (savedFullSnapshot.config) config = { ...config, ...savedFullSnapshot.config };
+                    if (savedFullSnapshot.state) state = { ...state, ...savedFullSnapshot.state };
+                } catch (err) {
+                    console.warn('שגיאה בקריאת שמירת על', err);
+                }
+            }
+        }
+
+        function syncPrintMeta(meta = {}) {
+            const modeLabel = meta.docTypeLabel || {
+                quote: 'הצעת מחיר',
+                invoice: 'חשבונית / דרישת תשלום',
+                contract: 'חוזה עבודה',
+                warranty: 'תעודת אחריות',
+                settings: 'מסמך'
+            }[state.mode] || 'מסמך';
+
+            const docNumVal = meta.docNum !== undefined ? meta.docNum : document.getElementById('inpDocNum')?.value;
+            const dateVal = meta.dateStr !== undefined ? meta.dateStr : (document.getElementById('inpDate')?.value ? new Date(document.getElementById('inpDate').value).toLocaleDateString('he-IL') : '');
+
+            document.getElementById('printBrandName').innerText = config.brandName || '';
+            document.getElementById('printDocType').innerText = modeLabel;
+            document.getElementById('printDocNum').innerText = `מסמך: ${docNumVal || '—'}`;
+            document.getElementById('printDocDate').innerText = `תאריך: ${dateVal || '—'}`;
+            document.getElementById('printFooterContactText').innerText = config.contact || '';
         }
 
         function setMode(mode) {
@@ -723,12 +1028,16 @@
             document.getElementById('sidebarLogoSymbol').innerText = config.symbol;
 
             // Update Document Header/Footer
+            document.getElementById('docTopSymbol').innerText = config.symbol || '';
+            document.getElementById('docTopBrandName').innerText = config.brandName || '';
+            document.getElementById('docTopSlogan').innerText = config.slogan || '';
             document.getElementById('docHeaderBrand').innerText = config.brandName;
             document.getElementById('docHeaderSlogan').innerText = config.slogan;
             document.getElementById('docFooterContact').innerText = config.contact;
             document.getElementById('docFooterQuote').innerText = config.footerQuote;
 
             persistState();
+            syncPrintMeta();
         }
 
         function refreshDoc() {
@@ -737,6 +1046,13 @@
             const dateVal = document.getElementById('inpDate').value;
             const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('he-IL') : '';
             const docNum = document.getElementById('inpDocNum').value;
+            const docTypeLabel = {
+                quote: 'הצעת מחיר',
+                invoice: 'חשבונית / דרישת תשלום',
+                contract: 'חוזה עבודה',
+                warranty: 'תעודת אחריות',
+                settings: 'מסמך'
+            }[state.mode] || 'מסמך';
             const vatRate = parseFloat(document.getElementById('inpVat').value || '0');
             const discountRate = parseFloat(document.getElementById('inpDiscount').value || '0');
             const currency = document.getElementById('inpCurrency').value;
@@ -755,6 +1071,7 @@
             // Update Meta
             document.getElementById('outDate').innerText = dateStr;
             document.getElementById('outDocNum').innerText = docNum;
+            syncPrintMeta({ docTypeLabel, docNum, dateStr });
 
             const bodyContainer = document.getElementById('docBody');
             let html = '';
@@ -942,6 +1259,78 @@
                 `;
                 container.appendChild(div);
             });
+        }
+
+        // --- SNAPSHOT MANAGEMENT ---
+        function collectFormValues() {
+            const selectors = [
+                '#document-inputs input',
+                '#document-inputs textarea',
+                '#document-inputs select',
+                '#settings-mode input',
+                '#settings-mode textarea',
+                '#settings-mode select'
+            ].join(',');
+
+            const values = {};
+            document.querySelectorAll(selectors).forEach(el => {
+                if (!el.id) return;
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    values[el.id] = el.checked;
+                } else {
+                    values[el.id] = el.value;
+                }
+            });
+            return values;
+        }
+
+        function collectEditableValues() {
+            const values = {};
+            document.querySelectorAll('.editable-field[id]').forEach(el => {
+                values[el.id] = el.innerHTML;
+            });
+            return values;
+        }
+
+        function applyFormValues(values = {}) {
+            const entries = Object.entries(values);
+            if (!entries.length) return;
+            entries.forEach(([id, val]) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.checked = !!val;
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                } else {
+                    el.value = val;
+                    const evtName = (el.tagName === 'SELECT') ? 'change' : 'input';
+                    el.dispatchEvent(new Event(evtName, { bubbles: true }));
+                }
+            });
+        }
+
+        function applyEditableValues(values = {}) {
+            Object.entries(values).forEach(([id, html]) => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = html;
+            });
+        }
+
+        function saveFullSnapshot() {
+            const snapshot = {
+                version: '1.0',
+                savedAt: new Date().toISOString(),
+                mode: state.mode,
+                config: { ...config },
+                state: JSON.parse(JSON.stringify(state)),
+                formValues: collectFormValues(),
+                editableValues: collectEditableValues()
+            };
+
+            localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
+            savedFullSnapshot = snapshot;
+            showSavedBadge('הכול נשמר, אפשר לסגור בבטחה');
         }
 
     </script>
